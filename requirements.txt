@@ -1,0 +1,5 @@
+transformers>=4.36
+datasets
+evaluate
+numpy==1.26.4
+torch
