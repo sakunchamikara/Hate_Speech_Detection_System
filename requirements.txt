@@ -3,3 +3,4 @@ datasets
 evaluate
 numpy==1.26.4
 torch
+pandas~=2.3.0
