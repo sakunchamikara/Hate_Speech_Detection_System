@@ -5,9 +5,9 @@ from training.metrics import compute_metrics
 from inference.predictor import Predictor
 from training.preprocessor import tokenizer
 
-def run_training():
+def run_training(adhoc=False):
 
-    train_dataset, eval_dataset = load_dataset_pipeline()
+    train_dataset, eval_dataset = load_dataset_pipeline(adhoc=adhoc)
 
     model = get_model()
     training_args = get_training_args()
@@ -38,11 +38,12 @@ if __name__ == "__main__":
     parser.add_argument("--mode", choices=["train", "predict", "predict-batch"], required=True,
                         help="Mode: train, predict, or predict-batch")
     parser.add_argument("--text", type=str, help="Text input for prediction")
+    parser.add_argument("--adhoc", action="store_true", help="Enable ad hoc transliteration")
 
     args = parser.parse_args()
 
     if args.mode == "train":
-        run_training()
+        run_training(adhoc=args.adhoc)
     elif args.mode == "predict":
         if not args.text:
             print("Error: --text argument is required in predict mode")

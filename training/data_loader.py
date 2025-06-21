@@ -10,9 +10,9 @@ def load_dataset(train_path="data/SOLD_train.tsv", test_path="data/SOLD_test.tsv
 
     return train_df, test_df
 
-def preprocess_dataframe(df):
-    
-    df["clean_text"] = df["text"].apply(clean_and_transliterate)
+def preprocess_dataframe(df, adhoc=False):
+
+    df["clean_text"] = df["text"].apply(lambda x: clean_and_transliterate(x, adhoc=adhoc))
     df["hate"] = df["label"].apply(lambda x: 1 if x == "OFF" else 0)
     df = df[["clean_text", "hate"]].rename(columns={"clean_text": "text", "hate": "label"})
     return df
@@ -24,11 +24,11 @@ def convert_to_dataset(df):
     dataset.set_format("torch")
     return dataset
 
-def load_dataset_pipeline(train_path="data/SOLD_train.tsv", test_path="data/SOLD_test.tsv"):
+def load_dataset_pipeline(adhoc=False, train_path="data/SOLD_train.tsv", test_path="data/SOLD_test.tsv"):
 
     train_df, test_df = load_dataset(train_path, test_path)
-    train_df = preprocess_dataframe(train_df)
-    test_df = preprocess_dataframe(test_df)
+    train_df = preprocess_dataframe(train_df, adhoc=adhoc)
+    test_df = preprocess_dataframe(test_df, adhoc=adhoc)
     train_ds = convert_to_dataset(train_df)
     test_ds = convert_to_dataset(test_df)
     return train_ds, test_ds
