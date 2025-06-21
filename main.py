@@ -25,7 +25,8 @@ def run_training():
 
 
 def predict_text(text):
-    model_path = "/content/drive/MyDrive/msc_research/Data/models/trained_xlm_roberta"
+    # model_path = "/content/drive/MyDrive/msc_research/Data/models/trained_xlm_roberta"
+    model_path = "/models/trained_xlm_roberta"
     predictor = Predictor(model_path)
     label, confidence = predictor.predict(text)
     print(f"Input: {text}")
