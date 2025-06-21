@@ -35,6 +35,6 @@ def train_model(model, train_dataset, eval_dataset, training_args, compute_metri
     print("Final evaluation metrics:", results)
     return trainer
 
-def save_model(trainer,tokenizer,output_dir="models/trained_xlm_roberta"):
+def save_model(trainer,tokenizer,output_dir="/content/drive/MyDrive/models/trained_xlm_roberta"):
     trainer.save_model(output_dir)
     tokenizer.save_pretrained(output_dir)
