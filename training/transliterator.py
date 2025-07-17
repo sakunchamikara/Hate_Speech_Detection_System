@@ -481,47 +481,12 @@ def transliterate_mixed_text(text):
     for chunk in chunks:
         if re.fullmatch(r'[\u0D80-\u0DFF]+', chunk):  # Only Sinhala Unicode
             sinhala_text = transliterate_single_sinhala_chunk(chunk)
-            compressed = compress_romanized_word(sinhala_text)
+            compressed = smart_compress_romanized_word(sinhala_text)
             transliterated_chunks.append(compressed)
         else:
             transliterated_chunks.append(chunk)  # Keep English/punctuation
 
     return ''.join(transliterated_chunks)
-
-
-def compress_word(word):
-    variants = set()
-
-    # Rule 1: Drop final 'a'
-    if word.endswith('a') and len(word) > 3:
-        variants.add(word[:-1])
-
-    # Rule 2: Remove middle vowels (except the first letter)
-    if len(word) > 3:
-        core = word[1:]
-        no_mid_vowels = re.sub(r'[aeiou]', '', core)
-        variants.add(word[0] + no_mid_vowels)
-
-    # Rule 3: Remove all vowels
-    no_vowels = re.sub(r'[aeiou]', '', word)
-    if len(no_vowels) > 2:
-        variants.add(no_vowels)
-
-    # Rule 4: Drop one middle character (abbreviated forms)
-    if len(word) > 4:
-        for i in range(1, len(word) - 1):
-            variant = word[:i] + word[i+1:]
-            variants.add(variant)
-
-    variants.add(word)  # Keep the original too
-    variants = {v for v in variants if len(v) > 2}
-    return list(variants)
-
-def compress_romanized_word(word):
-    if len(word) < 4:
-        return word
-    variants = compress_word(word)
-    return random.choice(variants)
 
 # import chardet
 
@@ -536,16 +501,161 @@ def compress_romanized_word(word):
 # file= open("SOLD_test_Copy.tsv","r", encoding="utf-8")
 # file2= open("romanizedSinhala.tsv","w")
 
-# for i in file:
-# 	word=transliterate(i)
-# 	print(word)
-# 	file2.write(word)
-# file.close()
-# file2.close()
-# word  = "now මම hiගෙදර bosa යනවා"
-# result = transliterate_mixed_text(word)
-# print(result)
+
+def improved_compress_word(word):
+    variants = set()
+
+    # Rule 1: Drop final 'a' (common in Sinhala)
+    if word.endswith('a') and len(word) > 3:
+        variants.add(word[:-1])
+
+    # Rule 2: Handle double consonants (reduce to single)
+    doubled_consonants = re.sub(r'([bcdfghjklmnpqrstvwxyz])\1+', r'\1', word)
+    if doubled_consonants != word:
+        variants.add(doubled_consonants)
+
+    # Rule 3: Remove middle vowels but keep first and last
+    if len(word) > 4:
+        first_char = word[0]
+        last_char = word[-1]
+        middle = word[1:-1]
+        no_mid_vowels = re.sub(r'[aeiou]', '', middle)
+        if no_mid_vowels:
+            variants.add(first_char + no_mid_vowels + last_char)
+
+    # Rule 4: Common Sinhala contractions
+    contractions = {
+        'tha': 'ta', 'kha': 'ka', 'cha': 'ca', 'sha': 'sa',
+        'dha': 'da', 'bha': 'ba', 'gha': 'ga', 'jha': 'ja'
+    }
+
+    contracted_word = word
+    for long_form, short_form in contractions.items():
+        contracted_word = contracted_word.replace(long_form, short_form)
+    if contracted_word != word:
+        variants.add(contracted_word)
+
+    # Rule 5: Remove specific vowel patterns common in romanized Sinhala
+    # Remove 'ee' -> 'e', 'aa' -> 'a', 'oo' -> 'o'
+    vowel_reduced = re.sub(r'([aeiou])\1+', r'\1', word)
+    if vowel_reduced != word:
+        variants.add(vowel_reduced)
+
+    # Rule 6: Handle 'y' variations (y -> i)
+    if 'y' in word:
+        y_variant = word.replace('y', 'i')
+        variants.add(y_variant)
+
+    # Rule 7: Common Sri Lankan name patterns
+    if word.endswith('gama'):
+        variants.add(word[:-4] + 'gma')
+    if word.endswith('wela'):
+        variants.add(word[:-4] + 'wla')
+    if word.endswith('kanda'):
+        variants.add(word[:-5] + 'knda')
+
+    # Rule 8: Drop one character from middle (conservative)
+    if len(word) > 5:
+        mid_point = len(word) // 2
+        for i in range(max(1, mid_point - 1), min(len(word) - 1, mid_point + 2)):
+            if word[i] in 'aeiou':  # Prefer removing vowels
+                variant = word[:i] + word[i + 1:]
+                variants.add(variant)
+
+    # Always keep the original
+    variants.add(word)
+
+    # Filter out very short variants
+    variants = {v for v in variants if len(v) > 2}
+
+    return list(variants)
+
+
+def smart_compress_romanized_word(word):
+    if len(word) < 4:
+        return word
+
+    variants = improved_compress_word(word)
+
+    # Scoring system for better variant selection
+    scored_variants = []
+
+    for variant in variants:
+        score = 0
+
+        # Prefer variants that maintain consonant clusters
+        if re.search(r'[bcdfghjklmnpqrstvwxyz]{2,}', variant):
+            score += 2
+
+        # Prefer variants without double letters
+        if not re.search(r'([a-z])\1', variant):
+            score += 1
+
+        # Prefer shorter variants
+        score += (len(word) - len(variant)) * 0.5
+
+        # Prefer variants that end with consonants (common in Sinhala names)
+        if variant[-1] not in 'aeiou':
+            score += 1
+
+        scored_variants.append((score, variant))
+
+    # Sort by score and return the best one
+    scored_variants.sort(key=lambda x: x[0], reverse=True)
+
+    # Add some randomness among top variants
+    top_variants = [v for s, v in scored_variants[:min(3, len(scored_variants))]]
+    print(top_variants)
+    return random.choice(top_variants)
+
+
+def generate_multiple_variants(word, num_variants=3):
+    if len(word) < 4:
+        return [word]
+
+    all_variants = improved_compress_word(word)
+
+    # Return up to num_variants different variants
+    return random.sample(all_variants, min(num_variants, len(all_variants)))
+
+
+# TESTING FUNCTIONS
+
+# def test_transliteration():
+#     """Test function with various Sinhala words"""
+#     test_cases = [
+#         "කොළඹ",  # Colombo
+#         "ගල්කිස්ස",  # Galkissa
+#         "මහනුවර",  # Mahanaura -> Kandy
+#         "අනුරාධපුර",  # Anuradhapura
+#         "මාතර",  # Matara
+#         "යාපනය",  # Jaffna
+#         "නුවර එළිය",  # Nuwara Eliya
+#         "පොළොන්නරුව",  # Polonnaruwa
+#     ]
+#
+#     print("=== TRANSLITERATION TESTS ===")
+#     for sinhala_word in test_cases:
+#         romanized = transliterate_single_sinhala_chunk(sinhala_word)
+#         compressed = smart_compress_romanized_word(romanized)
+#         variants = generate_multiple_variants(romanized)
+#
+#         print(f"Original: {sinhala_word}")
+#         print(f"Romanized: {romanized}")
+#         print(f"Compressed: {compressed}")
+#         print(f"Variants: {variants}")
+#         print("-" * 40)
+#
+#
+# def test_mixed_text():
+#     """Test mixed Sinhala-English text"""
+#     mixed_text = "Hello මම කොළඹ යනවා today"
+#     result = transliterate_mixed_text(mixed_text)
+#     print(f"Mixed text: {mixed_text}")
+#     print(f"Result: {result}")
+
+# Uncomment to test
+# test_transliteration()
+# test_mixed_text()
 # print("Press Enter to exit...")
 # input()
-
-
