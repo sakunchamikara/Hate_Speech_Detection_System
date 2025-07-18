@@ -9,8 +9,13 @@ def main():
         "texts",
         metavar="TEXT",
         type=str,
-        nargs="+",
+        nargs="*",
         help="One or more Romanized Sinhala texts to analyze"
+    )
+    parser.add_argument(
+        "--file",
+        type=str,
+        help="Path to a file containing one text per line"
     )
     parser.add_argument(
         "--model",
@@ -20,13 +25,22 @@ def main():
     )
 
     args = parser.parse_args()
-
     predictor = Predictor(model_path=args.model)
 
-    for text in args.texts:
-        label, confidence = predictor.predict(text)
-        label_str = "hate" if label == 1 else "non-hate"
-        print(f'"{text}" → {label_str} (confidence: {confidence:.4f})')
+    # Read texts
+    if args.file:
+        with open(args.file, encoding="utf-8") as f:
+            texts = [line.strip() for line in f if line.strip()]
+    else:
+        texts = args.texts
+
+    if not texts:
+        print("No texts provided. Use arguments or --file.")
+        return
+
+    results = predictor.predict(texts)
+    for r in results:
+        print(f'"{r["text"]}" → {r["label"]} (confidence: {r["confidence"]})')
 
 if __name__ == "__main__":
     main()
