@@ -2,7 +2,7 @@ import argparse
 from training.trainer import get_model, get_training_args, train_model ,save_model
 from training.data_loader import load_dataset_pipeline
 from training.metrics import compute_metrics
-from inference.predictor import Predictor
+from romsi_hate_speech.predictor import Predictor
 from training.preprocessor import tokenizer
 
 def run_training(adhoc=False):

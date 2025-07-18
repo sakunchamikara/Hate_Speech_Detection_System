@@ -1,0 +1,23 @@
+# Normalize all text files to LF in repo
+* text=auto eol=lf
+
+# Explicitly set UTF-8 encoding for these file types
+*.py text working-tree-encoding=UTF-8
+*.md text working-tree-encoding=UTF-8
+*.json text working-tree-encoding=UTF-8
+*.yml text working-tree-encoding=UTF-8
+
+# Treat images as binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+
+# Treat model files as binary
+*.bin binary
+*.pt binary
+*.h5 binary
+
+# CSV/TSV files as text
+*.csv text
+*.tsv text

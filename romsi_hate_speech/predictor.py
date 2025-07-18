@@ -2,7 +2,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
 class Predictor:
-    def __init__(self, model_path="models/trained_xlm_roberta"):
+    def __init__(self, model_path="sakunchamikara/romsi-hate-speech"):
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
         self.model = AutoModelForSequenceClassification.from_pretrained(model_path)
