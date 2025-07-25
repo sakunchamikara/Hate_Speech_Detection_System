@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Romanized Sinhala Hate Speech Detector",
+  "version": "1.0",
+  "description": "Detects and highlights hate speech in Romanized Sinhala text on web pages.",
+  "permissions": [
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "https://romsi-api.fly.dev/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content_script.js"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

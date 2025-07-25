@@ -1,26 +1,17 @@
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
+from model_loader import ModelLoader
+from text_preprocessor import TextPreprocessor
 
 class Predictor:
-    def __init__(self, model_path="models/trained_xlm_roberta"):
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_path)
-        self.model.eval()
-
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model.to(self.device)
+    def __init__(self, model_path="sakunchamikara/romsi-hate-speech"):
+        self.model_loader = ModelLoader(model_path)
+        self.tokenizer = self.model_loader.get_tokenizer()
+        self.model = self.model_loader.get_model()
+        self.device = self.model_loader.get_device()
+        self.preprocessor = TextPreprocessor(self.tokenizer, self.device)
 
     def predict(self, texts):
-        if isinstance(texts, str):
-            texts = [texts]
-
-        inputs = self.tokenizer(
-            texts,
-            return_tensors="pt",
-            truncation=True,
-            padding=True,
-            max_length=128
-        ).to(self.device)
+        inputs = self.preprocessor.preprocess(texts)
 
         with torch.no_grad():
             outputs = self.model(**inputs)
@@ -29,7 +20,9 @@ class Predictor:
 
         results = []
         for text, label, confidence in zip(
-            texts, labels.cpu(), probs.max(dim=1).values.cpu()
+            texts if isinstance(texts, list) else [texts],
+            labels.cpu(),
+            probs.max(dim=1).values.cpu()
         ):
             label_str = "hate" if label.item() == 1 else "non-hate"
             results.append({

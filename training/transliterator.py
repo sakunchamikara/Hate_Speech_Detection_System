@@ -509,12 +509,7 @@ def improved_compress_word(word):
     if word.endswith('a') and len(word) > 3:
         variants.add(word[:-1])
 
-    # Rule 2: Handle double consonants (reduce to single)
-    doubled_consonants = re.sub(r'([bcdfghjklmnpqrstvwxyz])\1+', r'\1', word)
-    if doubled_consonants != word:
-        variants.add(doubled_consonants)
-
-    # Rule 3: Remove middle vowels but keep first and last
+    # Rule 2: Remove middle vowels but keep first and last
     if len(word) > 4:
         first_char = word[0]
         last_char = word[-1]
@@ -523,7 +518,7 @@ def improved_compress_word(word):
         if no_mid_vowels:
             variants.add(first_char + no_mid_vowels + last_char)
 
-    # Rule 4: Common Sinhala contractions
+    # Rule 3: Common Sinhala contractions
     contractions = {
         'tha': 'ta', 'kha': 'ka', 'cha': 'ca', 'sha': 'sa',
         'dha': 'da', 'bha': 'ba', 'gha': 'ga', 'jha': 'ja'
@@ -535,18 +530,18 @@ def improved_compress_word(word):
     if contracted_word != word:
         variants.add(contracted_word)
 
-    # Rule 5: Remove specific vowel patterns common in romanized Sinhala
+    # Rule 4: Remove specific vowel patterns common in romanized Sinhala
     # Remove 'ee' -> 'e', 'aa' -> 'a', 'oo' -> 'o'
     vowel_reduced = re.sub(r'([aeiou])\1+', r'\1', word)
     if vowel_reduced != word:
         variants.add(vowel_reduced)
 
-    # Rule 6: Handle 'y' variations (y -> i)
+    # Rule 5: Handle 'y' variations (y -> i)
     if 'y' in word:
         y_variant = word.replace('y', 'i')
         variants.add(y_variant)
 
-    # Rule 7: Common Sri Lankan name patterns
+    # Rule 6: Common Sri Lankan name patterns
     if word.endswith('gama'):
         variants.add(word[:-4] + 'gma')
     if word.endswith('wela'):
@@ -554,7 +549,7 @@ def improved_compress_word(word):
     if word.endswith('kanda'):
         variants.add(word[:-5] + 'knda')
 
-    # Rule 8: Drop one character from middle (conservative)
+    # Rule 7: Drop one character from middle (conservative)
     if len(word) > 5:
         mid_point = len(word) // 2
         for i in range(max(1, mid_point - 1), min(len(word) - 1, mid_point + 2)):
@@ -583,10 +578,6 @@ def smart_compress_romanized_word(word):
     for variant in variants:
         score = 0
 
-        # Prefer variants that maintain consonant clusters
-        if re.search(r'[bcdfghjklmnpqrstvwxyz]{2,}', variant):
-            score += 2
-
         # Prefer variants without double letters
         if not re.search(r'([a-z])\1', variant):
             score += 1
@@ -605,7 +596,6 @@ def smart_compress_romanized_word(word):
 
     # Add some randomness among top variants
     top_variants = [v for s, v in scored_variants[:min(3, len(scored_variants))]]
-    print(top_variants)
     return random.choice(top_variants)
 
 
