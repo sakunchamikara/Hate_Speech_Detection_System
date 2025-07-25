@@ -10,17 +10,21 @@ class ModelTrainer:
     def get_training_args(self, output_dir="results"):
         return TrainingArguments(
             output_dir=output_dir,
-            evaluation_strategy="epoch",
-            logging_strategy="epoch",
             report_to="none",
+            eval_strategy="epoch",
             save_strategy="epoch",
             learning_rate=2e-5,
-            per_device_train_batch_size=16,
-            per_device_eval_batch_size=16,
-            num_train_epochs=5,
+            per_device_train_batch_size=8,
+            per_device_eval_batch_size=8,
+            num_train_epochs=7,
             weight_decay=0.01,
             load_best_model_at_end=True,
-            metric_for_best_model="f1"
+            metric_for_best_model="eval_f1",
+            greater_is_better=True,
+            save_total_limit=3,
+            seed=42,
+            warmup_steps=500,
+            gradient_accumulation_steps=2,
         )
 
     def train(self, train_dataset, eval_dataset, compute_metrics, tokenizer=None, output_dir="results"):

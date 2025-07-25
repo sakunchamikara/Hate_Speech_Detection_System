@@ -1,5 +1,6 @@
 import pandas as pd
 from datasets import Dataset
+from sklearn.model_selection import train_test_split
 from training.training_preprocessor import TrainingPreprocessor
 
 class DatasetLoader:
@@ -23,13 +24,25 @@ class DatasetLoader:
     def convert_to_dataset(self, df):
         dataset = Dataset.from_pandas(df)
         dataset = dataset.map(self.preprocessor.tokenize, batched=True)
+        dataset = dataset.remove_columns([col for col in dataset.column_names if col not in ['input_ids', 'attention_mask', 'label']])
         dataset.set_format("torch")
         return dataset
 
     def load(self):
         train_df, test_df = self.load_dataframe()
+
         train_df = self.preprocess_dataframe(train_df)
         test_df = self.preprocess_dataframe(test_df)
+
+        val_df, final_test_df = train_test_split(
+            test_df,
+            test_size=0.5,
+            random_state=42,
+            stratify=test_df['label']
+        )
+
         train_ds = self.convert_to_dataset(train_df)
-        test_ds = self.convert_to_dataset(test_df)
-        return train_ds, test_ds
+        val_ds = self.convert_to_dataset(val_df)
+        final_test_ds = self.convert_to_dataset(final_test_df)
+
+        return train_ds, val_ds, final_test_ds

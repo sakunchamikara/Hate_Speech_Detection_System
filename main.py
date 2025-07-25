@@ -6,25 +6,23 @@ from training.training_preprocessor import TrainingPreprocessor
 from romsi_hate_speech.predictor import Predictor
 
 def run_training(adhoc=False):
-    # Load and preprocess data
     loader = DatasetLoader(adhoc=adhoc)
-    train_dataset, eval_dataset = loader.load()
+    train_dataset, val_dataset, final_test_dataset = loader.load()
 
-    # Initialize training components
     preprocessor = TrainingPreprocessor(adhoc=adhoc)
     metrics = MetricsEvaluator()
     trainer = ModelTrainer()
 
-    # Train model
     trainer_obj = trainer.train(
         train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
+        eval_dataset=val_dataset,
         compute_metrics=metrics.compute,
         tokenizer=preprocessor.tokenizer
     )
 
-    # Evaluate and save
-    trainer.evaluate(trainer_obj)
+    print("Final Evaluation on Unseen Test Set:")
+    trainer.evaluate(trainer_obj, eval_dataset=final_test_dataset)
+
     trainer.save_model(trainer_obj, preprocessor.tokenizer, output_dir="models/saved_model")
 
 def predict_text(text):
