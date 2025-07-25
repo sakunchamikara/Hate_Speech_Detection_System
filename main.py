@@ -3,6 +3,7 @@ from training.model_trainer import ModelTrainer
 from training.data_loader import DatasetLoader
 from training.metrics_evaluator import MetricsEvaluator
 from training.training_preprocessor import TrainingPreprocessor
+from training.model_evaluator import ModelEvaluator
 from romsi_hate_speech.predictor import Predictor
 
 def run_training(adhoc=False):
@@ -20,8 +21,19 @@ def run_training(adhoc=False):
         tokenizer=preprocessor.tokenizer
     )
 
-    print("Final Evaluation on Unseen Test Set:")
+    print("\n[INFO] HuggingFace evaluation on final test set:")
     trainer.evaluate_model(trainer_obj, eval_dataset=final_test_dataset)
+
+    print("\n[INFO] Manual evaluation using ModelEvaluator:")
+    model_path = "models/saved_model"
+    predictor = Predictor(model_path)
+    predictions = predictor.predict([x["text"] for x in final_test_dataset])
+
+    y_pred = [1 if p["label"] == "hate" else 0 for p in predictions]
+    y_true = final_test_dataset["label"]
+
+    evaluator = ModelEvaluator()
+    evaluator.evaluate_model(y_true, y_pred)
 
     trainer.save_model(trainer_obj, preprocessor.tokenizer, output_dir="models/saved_model")
 

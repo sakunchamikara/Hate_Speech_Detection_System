@@ -7,7 +7,7 @@ class ModelEvaluator:
         else:
             self.target_names = target_names
 
-    def evaluate(self, y_true, y_pred):
+    def evaluate_model(self, y_true, y_pred):
         report = classification_report(y_true, y_pred, target_names=self.target_names, output_dict=False)
         matrix = confusion_matrix(y_true, y_pred)
 
