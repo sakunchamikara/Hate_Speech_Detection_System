@@ -40,8 +40,11 @@ class ModelTrainer:
         trainer.train()
         return trainer
 
-    def evaluate(self, trainer):
-        results = trainer.evaluate()
+    def evaluate_model(self, trainer, eval_dataset=None):
+        if eval_dataset is not None:
+            results = trainer.evaluate(eval_dataset=eval_dataset)
+        else:
+            results = trainer.evaluate()
         print("Final evaluation metrics:", results)
         return results
 

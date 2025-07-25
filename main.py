@@ -21,7 +21,7 @@ def run_training(adhoc=False):
     )
 
     print("Final Evaluation on Unseen Test Set:")
-    trainer.evaluate(trainer_obj, eval_dataset=final_test_dataset)
+    trainer.evaluate_model(trainer_obj, eval_dataset=final_test_dataset)
 
     trainer.save_model(trainer_obj, preprocessor.tokenizer, output_dir="models/saved_model")
 
