@@ -109,7 +109,7 @@ Or POST to `/predict`:
 
 To reproduce training:
 ```bash
-python training/trainer.py
+python training/model_trainer.py
 ```
 
 You can configure hyperparameters in `training/config.py`.

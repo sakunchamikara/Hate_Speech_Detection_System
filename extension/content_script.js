@@ -1,68 +1,79 @@
-console.log("✅ Romsi extension content script loaded:", window.location.href);
-
-function containsSinhala(text) {
-    return /[\u0D80-\u0DFF]/.test(text);
+// CommentScanner: extracts visible comments from supported platforms
+class CommentScanner {
+    getComments() {
+        const fbComments = Array.from(document.querySelectorAll("div[dir='auto']"));
+        const ytSpans = Array.from(document.querySelectorAll("yt-attributed-string#content-text span"));
+        return [...fbComments, ...ytSpans];
+    }
 }
 
-function containsLatin(text) {
-    return /[A-Za-z]/.test(text);
+// TextFilter: filters out short or non-Romanized Sinhala content
+class TextFilter {
+    static isValid(text) {
+        if (!text || text.length < 3) return false;
+        const hasSinhala = /[\u0D80-\u0DFF]/.test(text);
+        const hasLatin = /[A-Za-z]/.test(text);
+        return hasLatin || !hasSinhala;
+    }
 }
 
-function highlight(element) {
-    element.style.backgroundColor = "yellow";
-    element.style.border = "1px solid red";
+// Highlighter: applies styling to detected hate comments
+class Highlighter {
+    static highlight(element) {
+        element.style.backgroundColor = "yellow";
+        element.style.border = "1px solid red";
+    }
 }
 
-function scanAndDetect() {
-    // Facebook: visible comments
-    const fbComments = Array.from(document.querySelectorAll("div[dir='auto']"));
-
-    // YouTube: extract comment from span inside yt-attributed-string
-    const ytSpans = Array.from(document.querySelectorAll("yt-attributed-string#content-text span"));
-
-    const allComments = [...fbComments, ...ytSpans];
-
-    allComments.forEach(node => {
-        const text = node.innerText?.trim();
-        if (!text || text.length < 3) return;
-
-        if (node.dataset.checked === "true") return;
-        node.dataset.checked = "true";
-
-        const hasSinhala = containsSinhala(text);
-        const hasLatin = containsLatin(text);
-
-        if (hasSinhala && !hasLatin) {
-            console.log("Skipped pure Sinhala:", text);
-            return;
-        }
-
-        console.log("Checking text:", text);
-
-        try {
+// RomsiClient: communicates with the backend API
+class RomsiClient {
+    static async detectHate(text) {
+        return new Promise((resolve, reject) => {
             chrome.runtime.sendMessage({ type: "detectHate", text }, (response) => {
                 if (chrome.runtime.lastError) {
-                    console.error("Failed to send message:", chrome.runtime.lastError.message);
-                    return;
-                }
-
-                if (response && response.label === "hate") {
-                    console.log("Hate detected:", text, "(Confidence:", response.confidence, ")");
-                    highlight(node);
+                    reject(chrome.runtime.lastError.message);
+                } else {
+                    resolve(response);
                 }
             });
-        } catch (err) {
-            console.error("Exception sending message:", err);
-        }
-    });
+        });
+    }
 }
 
-// Run immediately
-scanAndDetect();
+// RomsiExtensionController: main controller class
+class RomsiExtensionController {
+    constructor() {
+        this.scanner = new CommentScanner();
+    }
 
-// Observe dynamic content
-const observer = new MutationObserver(() => scanAndDetect());
-observer.observe(document.body, { childList: true, subtree: true });
+    async scanAndDetect() {
+        const comments = this.scanner.getComments();
 
-// Fallback: run every 5 seconds
-setInterval(scanAndDetect, 5000);
+        for (const node of comments) {
+            const text = node.innerText?.trim();
+            if (node.dataset.checked === "true" || !TextFilter.isValid(text)) continue;
+            node.dataset.checked = "true";
+
+            try {
+                const response = await RomsiClient.detectHate(text);
+                if (response?.label === "hate") {
+                    console.log("Hate detected:", text, "(Confidence:", response.confidence, ")");
+                    Highlighter.highlight(node);
+                }
+            } catch (err) {
+                console.error("Error detecting hate:", err);
+            }
+        }
+    }
+
+    run() {
+        this.scanAndDetect();
+        const observer = new MutationObserver(() => this.scanAndDetect());
+        observer.observe(document.body, { childList: true, subtree: true });
+        setInterval(() => this.scanAndDetect(), 5000);
+    }
+}
+
+// Instantiate and run the extension
+const controller = new RomsiExtensionController();
+controller.run();

@@ -1,6 +1,6 @@
 import re
 
-class TextPreprocessor:
+class InferencePreprocessor:
     def __init__(self, tokenizer, device):
         self.tokenizer = tokenizer
         self.device = device

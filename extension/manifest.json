@@ -3,9 +3,7 @@
   "name": "Romanized Sinhala Hate Speech Detector",
   "version": "1.0",
   "description": "Detects and highlights hate speech in Romanized Sinhala text on web pages.",
-  "permissions": [
-    "scripting"
-  ],
+  "permissions": [],
   "host_permissions": [
     "http://127.0.0.1:8000/*",
     "https://romsi-api.fly.dev/*"

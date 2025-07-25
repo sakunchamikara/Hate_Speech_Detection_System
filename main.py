@@ -1,42 +1,44 @@
 import argparse
-from training.trainer import get_model, get_training_args, train_model ,save_model
-from training.data_loader import load_dataset_pipeline
-from training.metrics import compute_metrics
+from training.model_trainer import ModelTrainer
+from training.data_loader import DatasetLoader
+from training.metrics_evaluator import MetricsEvaluator
+from training.training_preprocessor import TrainingPreprocessor
 from romsi_hate_speech.predictor import Predictor
-from training.preprocessor import tokenizer
 
 def run_training(adhoc=False):
+    # Load and preprocess data
+    loader = DatasetLoader(adhoc=adhoc)
+    train_dataset, eval_dataset = loader.load()
 
-    train_dataset, eval_dataset = load_dataset_pipeline(adhoc=adhoc)
+    # Initialize training components
+    preprocessor = TrainingPreprocessor(adhoc=adhoc)
+    metrics = MetricsEvaluator()
+    trainer = ModelTrainer()
 
-    model = get_model()
-    training_args = get_training_args()
-
-    trainer = train_model(
-        model=model,
+    # Train model
+    trainer_obj = trainer.train(
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        tokenizer=tokenizer,
-        training_args=training_args,
-        compute_metrics=compute_metrics
+        compute_metrics=metrics.compute,
+        tokenizer=preprocessor.tokenizer
     )
 
-    save_model(trainer=trainer,tokenizer=tokenizer) 
-
+    # Evaluate and save
+    trainer.evaluate(trainer_obj)
+    trainer.save_model(trainer_obj, preprocessor.tokenizer, output_dir="models/saved_model")
 
 def predict_text(text):
-    model_path = "/content/drive/MyDrive/models/trained_xlm_roberta"
-    # model_path = "models/trained_xlm_roberta"
+    model_path = "models/saved_model"
     predictor = Predictor(model_path)
-    label, confidence = predictor.predict(text)
-    print(f"Input: {text}")
-    print(f"Prediction: {'Hate' if label == 1 else 'Not Hate'} ({confidence:.2f} confidence)")
+    result = predictor.predict(text)[0]
 
+    print(f"Input: {result['text']}")
+    print(f"Prediction: {result['label'].capitalize()} ({result['confidence']:.2f} confidence)")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Romanized Sinhala Hate Speech Detection CLI")
-    parser.add_argument("--mode", choices=["train", "predict", "predict-batch"], required=True,
-                        help="Mode: train, predict, or predict-batch")
+    parser.add_argument("--mode", choices=["train", "predict"], required=True,
+                        help="Mode: train or predict")
     parser.add_argument("--text", type=str, help="Text input for prediction")
     parser.add_argument("--adhoc", action="store_true", help="Enable ad hoc transliteration")
 

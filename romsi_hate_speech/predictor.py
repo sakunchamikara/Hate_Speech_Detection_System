@@ -1,6 +1,6 @@
 import torch
 from model_loader import ModelLoader
-from text_preprocessor import TextPreprocessor
+from inference_preprocessor import InferencePreprocessor
 
 class Predictor:
     def __init__(self, model_path="sakunchamikara/romsi-hate-speech"):
@@ -8,7 +8,7 @@ class Predictor:
         self.tokenizer = self.model_loader.get_tokenizer()
         self.model = self.model_loader.get_model()
         self.device = self.model_loader.get_device()
-        self.preprocessor = TextPreprocessor(self.tokenizer, self.device)
+        self.preprocessor = InferencePreprocessor(self.tokenizer, self.device)
 
     def predict(self, texts):
         inputs = self.preprocessor.preprocess(texts)
