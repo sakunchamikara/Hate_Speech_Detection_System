@@ -1,5 +1,5 @@
 class Config:
-    MODEL_NAME = "xlm-roberta-base"
+    MODEL_NAME = "bert-base-multilingual-cased"
     MAX_LENGTH = 128
     NUM_LABELS = 2
     NUM_EPOCHS = 3

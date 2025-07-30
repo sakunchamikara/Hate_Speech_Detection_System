@@ -3,7 +3,7 @@ from romsi_hate_speech import Predictor
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Detect Romanized Sinhala hate speech using XLM-RoBERTa"
+        description="Detect Romanized Sinhala hate speech using mBERT"
     )
     parser.add_argument(
         "texts",
