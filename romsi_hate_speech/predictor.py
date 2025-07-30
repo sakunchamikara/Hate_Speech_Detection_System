@@ -19,10 +19,13 @@ class Predictor:
             labels = torch.argmax(probs, dim=1)
 
         results = []
+        if isinstance(texts, str):
+            texts = [texts]
+
         for text, label, confidence in zip(
-            texts if isinstance(texts, list) else [texts],
-            labels.cpu(),
-            probs.max(dim=1).values.cpu()
+                texts,
+                labels.cpu(),
+                probs.max(dim=1).values.cpu()
         ):
             label_str = "hate" if label.item() == 1 else "non-hate"
             results.append({
@@ -30,4 +33,5 @@ class Predictor:
                 "label": label_str,
                 "confidence": round(confidence.item(), 4)
             })
+
         return results

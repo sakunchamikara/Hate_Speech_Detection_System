@@ -13,7 +13,7 @@ class RomsiAPIHandler {
                         console.error("API error:", error);
                         sendResponse({ error: error.toString() });
                     });
-                return true; // Keep the message channel open for async response
+                return true;
             }
         });
     }
@@ -34,6 +34,5 @@ class RomsiAPIHandler {
     }
 }
 
-// Initialize the background API handler
 const API_URL = "https://romsi-api.fly.dev/predict";
 const romsiHandler = new RomsiAPIHandler(API_URL);
