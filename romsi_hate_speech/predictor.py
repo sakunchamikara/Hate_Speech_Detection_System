@@ -1,6 +1,6 @@
 import torch
-from model_loader import ModelLoader
-from inference_preprocessor import InferencePreprocessor
+from romsi_hate_speech.model_loader import ModelLoader
+from romsi_hate_speech.inference_preprocessor import InferencePreprocessor
 
 class Predictor:
     def __init__(self, model_path="sakunchamikara/romsi-hate-speech"):
