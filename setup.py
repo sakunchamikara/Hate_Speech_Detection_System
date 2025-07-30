@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 setup(
     name="romsi_hate_speech",
-    version="1.0.0",
+    version="1.0.1",
     author="Sakun Chamikara",
-    description="Detect Romanized Sinhala hate speech using XLM-RoBERTa.",
+    description="Detect Romanized Sinhala hate speech using mBERT.",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/sakunchamikara/Hate_Speech_Detection_System",

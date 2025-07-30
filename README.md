@@ -1,7 +1,7 @@
 
 # Romanized Sinhala Hate Speech Detection
 
-Detect hate speech in **Romanized Sinhala text** using a fine-tuned deep learning model based on XLM-RoBERTa.  
+Detect hate speech in **Romanized Sinhala text** using a fine-tuned deep learning model based on mBERT.  
 This project includes:  
 ✅ Training code  
 ✅ Inference code  
@@ -15,7 +15,7 @@ This project includes:
 
 This project was developed as part of my MSc research to address hate speech detection in Romanized Sinhala, commonly used in Sri Lankan social media.
 
-The model is trained on the SOLD dataset, fine-tuned on XLM-RoBERTa, and exposes predictions through a REST API, a CLI, and as a reusable Python package.
+The model is trained on the SOLD dataset, fine-tuned on mBERT, and exposes predictions through a REST API, a CLI, and as a reusable Python package.
 
 ---
 
@@ -88,6 +88,22 @@ print(label, confidence)
 romsi-detect "meka thamai mage msc research project eka"
 ```
 
+or for multiple Texts
+
+```bash
+from romsi_hate_speech.predictor import Predictor
+
+predictor = Predictor(model_path="sakunchamikara/romsi-hate-speech")
+texts = [
+    "patta horekta yahapalanayen adhyaksha thanathurak",
+    "marila palayan balla"
+]
+results = predictor.predict(texts)
+
+for r in results:
+    print(f'"{r["text"]}" → {r["label"]} (confidence: {r["confidence"]})')
+```
+
 ### 🌐 REST API
 Run the API server:
 ```bash
@@ -131,7 +147,9 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## 🌐 Links
 
-- [HuggingFace Model](https://huggingface.co/sakunchamikara/romsi-hate-speech) (if applicable)
-- [PyPI Package](https://pypi.org/project/romsi-hate-speech/) (if applicable)
+- [HuggingFace Model](https://huggingface.co/sakunchamikara/romsi-hate-speech)
+- [PyPI Package](https://pypi.org/project/romsi-hate-speech/)
+- [Chrome Extension](https://chromewebstore.google.com/detail/hogofieannodojgemhbljbclgjeinpad?utm_source=item-share-cb)
+- [Fly.io API](https://romsi-api.fly.dev/docs)
 
 ---
